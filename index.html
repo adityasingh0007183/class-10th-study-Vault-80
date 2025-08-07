@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PDF खजाना - बिहार बोर्ड</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* आपका मूल CSS, बस एक लाइन में सुधार के साथ */
+        html { height: 100%; overflow: hidden; }
+        body { height: 100%; overflow: hidden; position: fixed; width: 100%; margin: 0; font-family: 'Poppins', sans-serif; color: var(--primary-text); transition: color var(--transition-speed); }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; transition: opacity 0.8s ease-out, visibility 0.8s ease-out; }
+        #splash-screen.hidden { opacity: 0; visibility: hidden; }
+        .profile-photo { width: 130px; height: 130px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.5); box-shadow: 0 0 30px rgba(255, 255, 255, 0.3); animation: pulse 2s infinite ease-in-out; }
+        .developer-name { color: #fff; margin-top: 25px; font-size: 1.2em; font-weight: 600; letter-spacing: 4px; opacity: 0; animation: fadeInText 1.5s 0.5s forwards; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 255, 255, 0.3); } 50% { transform: scale(1.05); box-shadow: 0 0 45px rgba(255, 255, 255, 0.5); } 100% { transform: scale(1); box-shadow: 0 0 30px rgba(255, 255, 255, 0.3); } }
+        @keyframes fadeInText { to { opacity: 1; } }
+        :root { --header-bg: rgba(255, 255, 255, 0.7); --card-bg: rgba(255, 255, 255, 0.6); --primary-text: #1d2b35; --secondary-text: #5a6a75; --accent-color: #3498db; --backdrop-blur: 10px; --transition-speed: 0.4s; --science-color1: #00c6ff; --science-color2: #0072ff; --social-science-color1: #f7971e; --social-science-color2: #ffd200; --math-color1: #8e2de2; --math-color2: #4a00e0; --hindi-color1: #f12711; --hindi-color2: #f5af19; --sanskrit-color1: #ff8008; --sanskrit-color2: #ffc837; --english-color1: #56ab2f; --english-color2: #a8e063; }
+        body.dark-mode { --header-bg: rgba(29, 43, 53, 0.7); --card-bg: rgba(44, 62, 80, 0.6); --primary-text: #ecf0f1; --secondary-text: #bdc3c7; --accent-color: #5dade2; }
+        #app-container { width: 100%; height: 100%; background: linear-gradient(120deg, #a1c4fd, #c2e9fb, #a8edea, #fed6e3); background-size: 400% 400%; animation: background-pan 20s ease infinite; }
+        body.dark-mode #app-container { background: linear-gradient(120deg, #0f2027, #203a43, #2c5364); background-size: 400% 400%; }
+        @keyframes background-pan { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; backdrop-filter: blur(var(--backdrop-blur)); -webkit-backdrop-filter: blur(var(--backdrop-blur)); transition: transform var(--transition-speed) ease-in-out; transform: translateX(100%); }
+        .screen.active { transform: translateX(0); z-index: 2; }
+        .screen-header { background: var(--header-bg); padding: 15px 25px; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 10; }
+        .back-button, .screen-header h1 { color: var(--primary-text); }
+        .back-button { background: none; border: none; font-size: 22px; cursor: pointer; margin-right: 20px; }
+        .screen-header h1 { margin: 0; font-size: 1.5em; flex-grow: 1; }
+        .screen-content { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex-grow: 1; padding-bottom: 80px; }
+        .banner-slider { position: relative; overflow: hidden; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+        .banner-slides { display: flex; transition: transform 0.5s ease-in-out; }
+        .banner-slide { width: 100%; flex-shrink: 0; }
+        .banner-slide img { width: 100%; height: 200px; display: block; object-fit: cover; }
+        .banner-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5;}
+        .banner-dots .dot { width: 10px; height: 10px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.6); cursor: pointer; transition: background-color 0.3s; }
+        .banner-dots .dot.active { background-color: white; }
+        .welcome-header { text-align: center; margin-bottom: 40px; } .welcome-header h2 { font-size: 2.2em; } .welcome-header p { font-size: 1.2em; color: var(--secondary-text); }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+        /* --- यही वह सुधार है --- */
+        .card { border-radius: 20px; padding: 30px; cursor: pointer; text-align: center; border: 1px solid rgba(255, 255, 255, 0.2); color: white; } 
+        .card .icon { font-size: 3.5em; margin-bottom: 20px; } .card h3 { margin: 0; font-size: 1.5em; font-weight: 600; }
+        .card-science { background: linear-gradient(135deg, var(--science-color1), var(--science-color2)); } .card-social-science { background: linear-gradient(135deg, var(--social-science-color1), var(--social-science-color2)); } .card-math { background: linear-gradient(135deg, var(--math-color1), var(--math-color2)); } .card-hindi { background: linear-gradient(135deg, var(--hindi-color1), var(--hindi-color2)); } .card-sanskrit { background: linear-gradient(135deg, var(--sanskrit-color1), var(--sanskrit-color2)); } .card-english { background: linear-gradient(135deg, var(--english-color1), var(--english-color2)); }
+        .pdf-list { list-style: none; padding: 0; } .pdf-item { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; } .pdf-icon { font-size: 2em; color: #E74C3C; margin-right: 20px; }
+        .pdf-info { flex-grow: 1; } .pdf-info span { font-size: 1.2em; font-weight: 500; color: var(--primary-text); } .pdf-info p { margin: 5px 0 0; color: var(--secondary-text); font-size: 0.9em; }
+        .pdf-actions button, .pdf-actions a { background: var(--accent-color); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none;}
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: var(--header-bg); backdrop-filter: blur(var(--backdrop-blur)); display: flex; justify-content: space-around; align-items: center; z-index: 1001; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; background: none; border: none; color: var(--secondary-text); cursor: pointer; padding: 5px 10px; flex-grow: 1; } .nav-item i { font-size: 22px; margin-bottom: 4px; } .nav-item span { font-size: 12px; } .nav-item.active { color: var(--accent-color); }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; justify-content: center; align-items: center; background: linear-gradient(120deg, #a1c4fd, #c2e9fb); transition: opacity 0.8s, visibility 0.8s; }
+        body.dark-mode #login-screen { background: linear-gradient(120deg, #0f2027, #2c5364); }
+        #login-screen.hidden { opacity: 0; visibility: hidden; }
+        .auth-form { background: var(--header-bg); padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2); backdrop-filter: blur(10px); text-align: center; display: none; }
+        .auth-form.active { display: block; }
+        .auth-form h2 { color: var(--primary-text); } .input-group { margin-bottom: 20px; }
+        .password-wrapper { position: relative; display: flex; align-items: center; }
+        .password-wrapper input { width: 100%; padding-right: 45px !important; }
+        .password-wrapper .toggle-password { position: absolute; right: 15px; cursor: pointer; color: var(--secondary-text); }
+        .input-group input { width: 100%; padding: 15px; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--secondary-text); border-radius: 10px; color: var(--primary-text); box-sizing: border-box; }
+        .auth-form button { width: 100%; padding: 15px; background: var(--accent-color); border: none; border-radius: 10px; color: white; font-size: 1.2em; cursor: pointer; }
+        .auth-error { color: #e74c3c; margin-top: 15px; display: none; }
+        .auth-form p a { color: var(--accent-color); cursor: pointer; font-weight: 600; }
+        .profile-card { text-align: center; margin-bottom: 30px; background: var(--card-bg); padding: 25px; border-radius: 20px; } .profile-pic { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 15px auto; border: 3px solid var(--accent-color); } .profile-details h3 { font-size: 1.6em; color: var(--primary-text); } .profile-details p { color: var(--secondary-text); font-size: 1em; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; background: var(--card-bg); border-radius: 12px; margin-bottom: 12px; }
+        .setting-item .action-button { background-color: #e74c3c; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; border: none; } .setting-item .action-button.clear { background-color: #f39c12; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; } .switch input { opacity: 0; width: 0; height: 0; } .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; } .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; } input:checked + .slider { background-color: var(--accent-color); } input:checked + .slider:before { transform: translateX(24px); }
+    </style>
+</head>
+<body>
+    <div id="splash-screen"> <img src="pro.png" alt="Profile Photo" class="profile-photo"> <p class="developer-name">DEVELOPED BY A.S.R</p> </div>
+    
+    <div id="login-screen" class="hidden">
+        <form id="login-form" class="auth-form active">
+            <h2>लॉगिन करें</h2>
+            <div class="input-group"> <input type="email" id="login-email" placeholder="ईमेल आई.डी." required> </div>
+            <div class="input-group password-wrapper"> <input type="password" id="login-password" placeholder="पासवर्ड" required> <i class="fas fa-eye toggle-password"></i> </div>
+            <p class="auth-error"></p> <button type="submit">लॉगिन</button>
+            <p style="margin-top: 15px;">अकाउंट नहीं है? <a href="#" id="show-signup-link">नया अकाउंट बनाएं</a></p>
+        </form>
+        <form id="signup-form" class="auth-form">
+            <h2>नया अकाउंट बनाएं</h2>
+            <div class="input-group"> <input type="email" id="signup-email" placeholder="ईमेल आई.डी." required> </div>
+            <div class="input-group password-wrapper"> <input type="password" id="signup-password" placeholder="पासवर्ड (कम से कम 6 अक्षर)" required> <i class="fas fa-eye toggle-password"></i> </div>
+            <p class="auth-error"></p> <button type="submit">साइन अप</button>
+            <p style="margin-top: 15px;">पहले से अकाउंट है? <a href="#" id="show-login-link">लॉगिन करें</a></p>
+        </form>
+    </div>
+
+    <div id="app-container" style="display: none;"></div>
+    <nav class="bottom-nav" style="display: none;"> <button class="nav-item active" data-target="home"> <i class="fas fa-home"></i> <span>Home</span> </button> <button class="nav-item" data-target="downloads"> <i class="fas fa-download"></i> <span>Downloads</span> </button> <button class="nav-item" data-target="profile"> <i class="fas fa-user"></i> <span>Profile</span> </button> </nav>
+
+    <script>
+        // --- Supabase Client Initialization ---
+        const supabaseUrl = 'https://qzkjvgabvgiporoaxjve.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6a2p2Z2FidmdpcG9yb2F4anZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0ODczNzAsImV4cCI6MjA3MDA2MzM3MH0.ubk0qEK-YRg6h2NxdFdcsX9q56q6OqytDGDrDEeu27I';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // --- सभी ग्लोबल वेरिएबल्स ---
+        let appData = { banners: [], subjects: [], pdfs: {} };
+        const container = document.getElementById('app-container');
+        const bottomNav = document.querySelector('.bottom-nav');
+        const loginScreen = document.getElementById('login-screen');
+        const signupForm = document.getElementById('signup-form');
+        const loginForm = document.getElementById('login-form');
+        let currentScreenId = 'home';
+        let isTransitioning = false;
+
+        // --- सभी स्क्रीन बनाने वाले फंक्शन्स (आपके मूल कोड से) ---
+        function generateHomeScreen(subjects, banners) { const bannerHTML = banners.length > 0 ? `<div class="banner-slider"> <div class="banner-slides"> ${banners.map(banner => `<div class="banner-slide"> <a href="${banner.linkurl || '#'}"><img src="${banner.imageurl}" alt="App Banner"></a> </div>`).join('')} </div> <div class="banner-dots"></div> </div>` : ''; return ` <div id="home" class="screen active"> <div class="screen-header"> <h1>PDF खजाना</h1> </div> <div class="screen-content"> ${bannerHTML} <div class="welcome-header"> <h2>ज्ञान के भंडार में आपका स्वागत है</h2> <p>सफलता की ओर अपना पहला कदम बढ़ाएं</p> </div> <div class="card-grid"> ${subjects.map(s => `<div class="card ${s.color}" data-target="${s.id}"><div class="icon"><i class="fas ${s.icon}"></i></div><h3>${s.title}</h3></div>`).join('')} </div> </div> </div>`; }
+        function generateSubcategoryScreen(subject) { return ` <div id="${subject.id}" class="screen"> <div class="screen-header"><button class="back-button" data-target="home"><i class="fas fa-arrow-left"></i></button><h1>${subject.title}</h1></div> <div class="screen-content"> <div class="card-grid"> ${subject.subcategories.map(sub => ` <div class="card ${subject.color}" data-target="${sub.id}"> <div class="icon"><i class="fas ${sub.icon}"></i></div> <h3>${sub.title}</h3> </div>`).join('')} </div> </div> </div>`; }
+        function generatePdfListScreen(subcategory, parentSubjectId, pdfs = []) { const pdfsHTML = pdfs.length === 0 ? '<p style="text-align:center; color: var(--primary-text);">इस श्रेणी में कोई PDF नहीं है।</p>' : `<ul class="pdf-list">${pdfs.map(pdf => ` <li class="pdf-item"> <i class="fas fa-file-pdf pdf-icon"></i> <div class="pdf-info"> <span>${pdf.title}</span> <p>Size: ${pdf.size || 'N/A'}</p> </div> <div class="pdf-actions"> <a href="${pdf.url}" target="_blank">View</a> </div> </li>`).join('')}</ul>`; return `<div id="${subcategory.id}" class="screen"> <div class="screen-header"><button class="back-button" data-target="${parentSubjectId}"><i class="fas fa-arrow-left"></i></button><h1>${subcategory.title}</h1></div> <div class="screen-content">${pdfsHTML}</div> </div>`; }
+        function generateProfileScreen(user) { const isDark = document.body.classList.contains('dark-mode'); return ` <div id="profile" class="screen"> <div class="screen-header"><button class="back-button" data-target="home"><i class="fas fa-arrow-left"></i></button><h1>Profile</h1></div> <div class="screen-content"> <div class="profile-card"> <img src="${user.profilePic}" alt="Profile Picture" class="profile-pic"> <div class="profile-details"> <h3>${user.name}</h3> <p>${user.email}</p> </div> </div> <div class="settings-group"> <div class="setting-item"> <span><i class="fas fa-moon"></i>डार्क मोड</span> <label class="switch"><input type="checkbox" id="theme-toggle-switch" ${isDark ? 'checked' : ''}><span class="slider"></span></label> </div> <div class="setting-item"> <span><i class="fas fa-trash-alt"></i>डाउनलोड हिस्ट्री साफ़ करें</span> <button id="clear-history-button" class="action-button clear">साफ़ करें</button> </div> <div class="setting-item"> <span><i class="fas fa-sign-out-alt"></i>लॉगआउट</span> <button id="logout-button" class="action-button">लॉगआउट</button> </div> </div> </div> </div>`; }
+        function generateDownloadsScreen() { return `<div id="downloads" class="screen"> <div class="screen-header"><button class="back-button" data-target="home"><i class="fas fa-arrow-left"></i></button><h1>Downloads</h1></div> <div class="screen-content"><p style="color: var(--primary-text); text-align: center;">यहाँ आपकी डाउनलोड की गई फाइलें दिखाई देंगी।</p></div> </div>`; }
+        
+        // --- ऐप को बनाने और दिखाने वाला फंक्शन ---
+        function renderApp(user) {
+            appData.currentUser = { name: user.email.split('@')[0], email: user.email, profilePic: "pro.png" };
+            let html = '';
+            html += generateHomeScreen(appData.subjects, appData.banners);
+            appData.subjects.forEach(subject => { if (subject.subcategories && subject.subcategories.length > 0) { html += generateSubcategoryScreen(subject); subject.subcategories.forEach(sub => { html += generatePdfListScreen(sub, subject.id, appData.pdfs[sub.id]); }); } });
+            html += generateDownloadsScreen();
+            html += generateProfileScreen(appData.currentUser);
+            container.innerHTML = html;
+            setupEventListeners();
+            if (appData.banners.length > 0) initBannerSlider();
+        }
+
+        // --- मुख्य ऐप लोड करने का फंक्शन ---
+        async function loadMainApp(user) {
+            try {
+                const [bannersRes, subjectsRes, pdfsRes] = await Promise.all([ supabaseClient.from('banners').select('*'), supabaseClient.from('subjects').select('*, subcategories(*)'), supabaseClient.from('pdfs').select('*') ]);
+                if (bannersRes.error || subjectsRes.error || pdfsRes.error) throw bannersRes.error || subjectsRes.error || pdfsRes.error;
+                
+                appData.banners = bannersRes.data;
+                appData.subjects = subjectsRes.data;
+                pdfsRes.data.forEach(pdf => { (appData.pdfs[pdf.category_id] = appData.pdfs[pdf.category_id] || []).push(pdf); });
+                
+                document.getElementById('splash-screen').classList.add('hidden');
+                loginScreen.classList.add('hidden');
+                container.style.display = 'block';
+                bottomNav.style.display = 'flex';
+                renderApp(user);
+            } catch (error) { alert("डेटा लोड करने में त्रुटि: " + error.message); }
+        }
+
+        // --- बाकी सभी हेल्पर फंक्शन्स (अब ये काम करेंगे) ---
+        function showScreen(targetId) { if (isTransitioning || targetId === currentScreenId) return; isTransitioning = true; document.querySelectorAll('#app-container .screen').forEach(s => s.classList.remove('active')); document.getElementById(targetId)?.classList.add('active'); document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active')); document.querySelector(`.nav-item[data-target="${targetId}"]`)?.classList.add('active'); currentScreenId = targetId; setTimeout(() => isTransitioning = false, 400); }
+        function initBannerSlider() { const slides = document.querySelector('.banner-slides'); if (!slides || slides.children.length <= 1) return; const dotsContainer = document.querySelector('.banner-dots'); let currentIndex = 0; const totalSlides = slides.children.length; dotsContainer.innerHTML = ''; for (let i = 0; i < totalSlides; i++) { const dot = document.createElement('div'); dot.classList.add('dot'); if (i === 0) dot.classList.add('active'); dot.addEventListener('click', () => showSlide(i)); dotsContainer.appendChild(dot); } const dots = dotsContainer.querySelectorAll('.dot'); function showSlide(index) { slides.style.transform = `translateX(-${index * 100}%)`; dots.forEach(dot => dot.classList.remove('active')); dots[index]?.classList.add('active'); currentIndex = index; } setInterval(() => showSlide((currentIndex + 1) % totalSlides), 3000); }
+
+        // --- सभी इवेंट्स को सेट करने वाला फंक्शन ---
+        function setupEventListeners() {
+            document.body.addEventListener('click', async (event) => {
+                const navTarget = event.target.closest('[data-target]');
+                if (navTarget) { event.preventDefault(); showScreen(navTarget.dataset.target); return; }
+                if (event.target.id === 'logout-button') { const { error } = await supabaseClient.auth.signOut(); if (!error) location.reload(); else alert(error.message); }
+            });
+            document.body.addEventListener('change', (event) => { if (event.target.id === 'theme-toggle-switch') { document.body.classList.toggle('dark-mode'); } });
+        }
+
+        // --- ऐप शुरू करने का मुख्य लॉजिक ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const splashScreen = document.getElementById('splash-screen');
+
+            // पासवर्ड टॉगल का लॉजिक
+            document.querySelectorAll('.toggle-password').forEach(toggle => {
+                toggle.addEventListener('click', (e) => {
+                    const passwordInput = e.target.previousElementSibling;
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    e.target.classList.toggle('fa-eye-slash');
+                });
+            });
+
+            // लॉगिन/साइनअप फॉर्म स्विच करना
+            document.getElementById('show-signup-link').addEventListener('click', (e) => { e.preventDefault(); loginForm.classList.remove('active'); signupForm.classList.add('active'); });
+            document.getElementById('show-login-link').addEventListener('click', (e) => { e.preventDefault(); signupForm.classList.remove('active'); loginForm.classList.add('active'); });
+
+            // लॉगिन फॉर्म का लॉजिक
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                const errorEl = loginForm.querySelector('.auth-error');
+                errorEl.style.display = 'none';
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) { errorEl.textContent = "अमान्य लॉगिन क्रेडेंशियल।"; errorEl.style.display = 'block'; } 
+                else if (data.user) { loadMainApp(data.user); }
+            });
+            
+            // साइनअप फॉर्म का लॉजिक
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const errorEl = signupForm.querySelector('.auth-error');
+                errorEl.style.display = 'none';
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) { errorEl.textContent = "यह ईमेल पहले से पंजीकृत हो सकता है।"; errorEl.style.display = 'block'; }
+                else { alert('अकाउंट बन गया! अब आप लॉगिन कर सकते हैं।'); signupForm.classList.remove('active'); loginForm.classList.add('active'); }
+            });
+
+            // सेशन की जांच करके ऐप शुरू करना
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            setTimeout(() => {
+                splashScreen.classList.add('hidden');
+                if (session) {
+                    loadMainApp(session.user);
+                } else {
+                    loginScreen.classList.remove('hidden');
+                }
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
